@@ -2,6 +2,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class CustomGoogleSearch {
     final static String apiKey = "AIzaSyBj-ITJkHzmIvWwx7NyTzyfgfz0QYLtmuo";
@@ -45,9 +51,17 @@ public class CustomGoogleSearch {
     }
 
     public static void main(String[] args) throws Exception {
-
+        List<String> imagesUrl = new ArrayList<String>();
         String url = buildSearchString("game", 1, 10);
         String result = search(url);
+        JSONObject json = new JSONObject(result);
+        JSONArray items = new JSONArray(json.get("items"));
+        for (int i=0;i<items.length();i++) {
+            JSONObject item = items.getJSONObject(i);
+            imagesUrl.add((String) item.get("link"));
+
+        }
+
         System.out.println(result);
 
     }
