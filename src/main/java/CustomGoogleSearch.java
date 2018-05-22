@@ -1,18 +1,28 @@
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class CustomGoogleSearch {
+
     final static String apiKey = "AIzaSyBj-ITJkHzmIvWwx7NyTzyfgfz0QYLtmuo";
     final static String customSearchEngineKey = "011355480889527342621:bznrw1ufoek";
     final static String searchURL = "https://www.googleapis.com/customsearch/v1?";
+    private String query = "fortnite youtube";
+    private int maxResults;
+    public CustomGoogleSearch(String query,int maxResults) {
+    this.query=query;
+    this.maxResults=maxResults;
+        doSearch();
+    }
 
     public static String search(String pUrl) {
         try {
@@ -37,6 +47,8 @@ public class CustomGoogleSearch {
         String newSearchString = searchString.replace(" ", "%20");
         String toSearch = searchURL +"q="+newSearchString +"&cx=" + customSearchEngineKey +"&searchType=image"+"&key=" + apiKey ;
 
+
+        toSearch += "&imgSize=xxlarge";
         // specify response format as json
         toSearch += "&alt=json";
 
@@ -49,20 +61,39 @@ public class CustomGoogleSearch {
         System.out.println("Seacrh URL: " + toSearch);
         return toSearch;
     }
+       public void doSearch() {
+           ImagesHandler imagesHandler = new ImagesHandler();
+           List<BufferedImage> images = new ArrayList<BufferedImage>();
+           String url = buildSearchString(query, 1, maxResults);
+           String result = search(url);
+           JSONObject json = new JSONObject(result);
+           JSONArray items = (JSONArray) json.get("items");
+           for (int jsonPictureIndex = 0; jsonPictureIndex < items.length(); jsonPictureIndex++) {
+               JSONObject item = items.getJSONObject(jsonPictureIndex);
+               try {
+                   JSONObject imageContext = item.getJSONObject("image");
+                   String imageThumbnailLink = (String) imageContext.get("thumbnailLink");
+                   String originalImageLink = (String) item.get("link");
+                   BufferedImage image = ImageIO.read(new URL(imageThumbnailLink));
+                   images.add(image);
+                   imagesHandler.showPicture(jsonPictureIndex,originalImageLink,image);
+                   //  pictures.add(new AbstractMap.SimpleEntry(ImageIO.read(new URL(originalImageLink)),ImageIO.read(new URL(imageThumbnailLink))));
+               } catch (Exception e) {
+                   continue;
+               }
+               //ImagesHandler imagesHandler = new ImagesHandler(images);
 
-    public static void main(String[] args) throws Exception {
-        List<String> imagesUrl = new ArrayList<String>();
-        String url = buildSearchString("game", 1, 10);
-        String result = search(url);
-        JSONObject json = new JSONObject(result);
-        JSONArray items = new JSONArray(json.get("items"));
-        for (int i=0;i<items.length();i++) {
-            JSONObject item = items.getJSONObject(i);
-            imagesUrl.add((String) item.get("link"));
+               //imagesHandler.displayThumbnails();
+            //   imagesHandler.displayImages(images);
+               // JFrame snakeFrame = new JFrame();
+               //snakeFrame.setBounds(100, 200, 800, 800);
+               //snakeFrame.setVisible(true);
 
-        }
+           }
+       }
 
-        System.out.println(result);
-
+    /*public static void main(String[] args) throws Exception {
+        doSearch();
     }
-}
+*/
+    }
